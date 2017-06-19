@@ -9,8 +9,8 @@ import numpy as np
 from scipy.optimize import fmin_bfgs, fmin_l_bfgs_b
 
 # ***function: iterPageRank
-# this function takes initial node probabilities and a 
-# transition matrix then use power iteration to find 
+# this function takes initial node probabilities and a
+# transition matrix then use power iteration to find
 # the PageRank of nodes
 def iterPageRank(pp, trans):
     ppnew = np.dot(pp, trans)
@@ -25,10 +25,10 @@ def iterPageRank(pp, trans):
 # the generated graph has the property of preferencial attachment
 # an edge list is returned
 def genCopyGraph(nnodes, alpha):
-    # since the copy model starts with a triad, the input number of 
+    # since the copy model starts with a triad, the input number of
     # nodes should be larger than 3
     if nnodes <= 3:
-        print "Number of nodes should be larger than 3..."
+        print("Number of nodes should be larger than 3...")
         return
     # inital setting with a triad
     degrees = np.repeat(2, 3)
@@ -58,10 +58,10 @@ def genCopyGraph(nnodes, alpha):
                         if randPick <= accu:
                             tar = j
                             break
-                        
+
                 edges.append((tar, i))
                 degrees[tar] += 1
-        
+
         degrees = np.append(degrees, 3)
     return [edges, degrees]
 
@@ -77,7 +77,7 @@ def calStrength(features, beta):
 
 
 # ***function: strengthDiff
-# calculate an returns the gradient of strength functioin with 
+# calculate an returns the gradient of strength functioin with
 # respect to beta, the returned value is a vector
 def strengthDiff(features, beta):
     # return a vector of gradient of strength
@@ -90,7 +90,7 @@ def strengthDiff(features, beta):
 
 
 # ***function: genTrans
-# this function takes in a graph (edge list and number of nodes), 
+# this function takes in a graph (edge list and number of nodes),
 # node features, source node, and alpha/beta parameters to generate
 # a random walk transition matrix.
 # transition probabilities are determined by edge strength
@@ -106,25 +106,26 @@ def genTrans(nnodes, g, features, s, alpha, beta):
         strength = calStrength(features[g[i][0]][g[i][1]], beta)
         trans[g[i][0], g[i][1]] = strength
         trans[g[i][1], g[i][0]] = strength
-    
+
     # normalize the transition matrix
     for i in range(nnodes):
         tempSum = sum(trans[i,])
         if tempSum > 0:
-            trans[i,] = map(lambda x: x/tempSum, trans[i, ])
-    
+            fn = np.vectorize(lambda x: x / tempSum)
+            trans[i, ] = fn(trans[i, ])
+
     # create a list of transition matrices for a set of sources
-    trans_multi = []    
-    
+    trans_multi = []
+
     for si in range(len(s)):
     # create the one matrix
         one = np.zeros((nnodes, nnodes))
         for i in range(nnodes):
             one[i, s[si]] = 1
-            
+
         # combine the regular transition matrix and the one matrix
-        trans_multi.append((1-alpha)*trans + alpha*one) 
-    
+        trans_multi.append((1-alpha)*trans + alpha*one)
+
     return trans_multi
 
 # ***function: genTrans_plain
@@ -135,30 +136,31 @@ def genTrans_plain(nnodes, g, s, alpha):
     for i in range(len(g)):
         trans[g[i][0], g[i][1]] = 1
         trans[g[i][1], g[i][0]] = 1
-    
+
     # normalize the transition matrix
     for i in range(nnodes):
         tempSum = sum(trans[i,])
         if tempSum > 0:
-            trans[i,] = map(lambda x: x/tempSum, trans[i, ])
-    
+            fn = np.vectorize(lambda x: x / tempSum)
+            trans[i, ] = fn(trans[i, ])
+
     # create a list of transition matrices for a set of sources
-    trans_multi = []    
-    
+    trans_multi = []
+
     for si in range(len(s)):
         # create the one matrix
         one = np.zeros((nnodes, nnodes))
         for i in range(nnodes):
             one[i, s[si]] = 1
-            
+
         # combine the regular transition matrix and the one matrix
         trans_multi.append((1-alpha)*trans + alpha*one)
-    
+
     return trans_multi
 
 
 # ***function: genTrans_tele
-# this function takes in a set of teleport nodes and compute the 
+# this function takes in a set of teleport nodes and compute the
 # transition matrix accordingly. the difference between genTrans function
 # is that genTrans produces transition matrices for single source nodes,
 # while genTrans_tele produces transition matrices for a set of teleport
@@ -171,16 +173,17 @@ def genTrans_tele(nnodes, g, features, tele, alpha, beta):
         strength = calStrength(features[g[i][0]][g[i][1]], beta)
         trans[g[i][0], g[i][1]] = strength
         trans[g[i][1], g[i][0]] = strength
-    
+
     # normalize the transition matrix
     for i in range(nnodes):
         tempSum = sum(trans[i,])
         if tempSum > 0:
-            trans[i,] = map(lambda x: x/tempSum, trans[i, ])
-    
+            fn = np.vectorize(lambda x: x / tempSum)
+            trans[i, ] = fn(trans[i, ])
+
     # create a list of transition matrices for a set of teleport sets
     trans_multi = []
-    
+
     for t in range(len(tele)):
         teleSize = len(tele[t])
         one = np.zeros((nnodes, nnodes))
@@ -191,15 +194,15 @@ def genTrans_tele(nnodes, g, features, tele, alpha, beta):
             # the calculated transition matrix with teleportation
             trans_multi.append((1-alpha)*trans + alpha*one)
         else:
-            # transition matrix without transporation since the 
+            # transition matrix without transporation since the
             # input teleport set is empty
             trans_multi.append(trans)
-    
+
     return trans_multi
 
 # ***function: genFeatures
 # input features are in edge list form, this function transfer the features into
-# matrix-style, with each element in the matrix a the feature vecotr of 
+# matrix-style, with each element in the matrix a the feature vecotr of
 # corresponding edge, the element is [] if the particular edge does not exist
 def genFeatures(nnodes, g, features):
     # very elemnt in the array is a list
@@ -208,7 +211,7 @@ def genFeatures(nnodes, g, features):
     for i in range(len(g)):
         fea[g[i][0]][g[i][1]] = features[i]
         fea[g[i][1]][g[i][0]] = features[i]
-    
+
     return fea
 
 
@@ -217,7 +220,7 @@ def genFeatures(nnodes, g, features):
 ## Below are the functions for learning process
 
 # ***function: iterPageDiff
-# this function use power-iteration-like method to return the gradient of 
+# this function use power-iteration-like method to return the gradient of
 # Supervised Random Walk pagerank scores
 def iterPageDiff(pdiff, p, trans, transdiff):
     pdiffnew = np.dot(pdiff, trans) + np.dot(p, transdiff)
@@ -231,16 +234,16 @@ def iterPageDiff(pdiff, p, trans, transdiff):
 ### this function is not used anymore ###
 #########################################
 # ***function: diffQelem
-# this function is called by diffQ, return the (i, j)-th element of the 
+# this function is called by diffQ, return the (i, j)-th element of the
 # derivative of transition matrix with respect to k-th element of beta
 def diffQelem(features, beta, trans_p, alpha, row, col, k):
     # calculates the element value of transition matrix's differentiation
-    # first calculate the denominator part    
+    # first calculate the denominator part
     denom = 0
     xdenom = 0
     for j in range(int(np.shape(trans_p)[1])):
         if trans_p[row, j] > 0:
-            # should check on the original version of transition matrix, 
+            # should check on the original version of transition matrix,
             # because teleportation does not contribute to gradient
             #temp = calStrength(np.asarray(features[row,])*np.asarray(features[j,])
             #, beta)
@@ -251,19 +254,19 @@ def diffQelem(features, beta, trans_p, alpha, row, col, k):
     #curFeat = np.asarray(features[row,])*np.asarray(features[col,])
     curFeat = features[row][col]
     strength = calStrength(curFeat, beta)
-    
+
     elem = (1-alpha)*(curFeat[k]*strength*denom - strength*xdenom) / (denom**2)
-    
+
     return elem
 
 
 # ***function: diffQ
-# given a Supervised Random Walk transition matrix, return the derivative of 
+# given a Supervised Random Walk transition matrix, return the derivative of
 # transition matrix with respect to the k-th element in parameter beta
 def diffQ(features, beta, trans_p, alpha):
-    
+
     nnodes = int(np.shape(trans_p)[0])
-	
+
     # first compute the (unnormalized) edge strength matrix and the gradient matrix
     sMat = np.zeros((nnodes, nnodes))
     for i in range(int(np.shape(trans_p)[0])):
@@ -272,32 +275,32 @@ def diffQ(features, beta, trans_p, alpha):
                 strength = calStrength(features[i][j], beta)
                 sMat[i, j] = strength
                 sMat[j, i] = strength
-    
+
     # gradQ is the gradient of strength matrix
-    # a list of matrices is computed, with the k-th item in the list be the 
+    # a list of matrices is computed, with the k-th item in the list be the
     # derivative of strength matrix with respect to the k-th element in beta
     # vecotr
     gradS = []
     for i in range(len(beta)):
-        gradS.append(np.zeros((nnodes, nnodes)))    
+        gradS.append(np.zeros((nnodes, nnodes)))
     for i in range(int(np.shape(trans_p)[0])):
         for j in range(int(np.shape(trans_p)[1])):
             if trans_p[i, j] > 0:
                 gradTemp = strengthDiff(features[i][j], beta)
                 for k in range(len(beta)):
                     gradS[k][i, j] = gradTemp[k]
-    
-    
+
+
     # compute the gradient of transition matrix
-    # a list of matrices is computed, with k-th element in the list be 
-    # the derivative of transition matrix with respect to the k-th 
+    # a list of matrices is computed, with k-th element in the list be
+    # the derivative of transition matrix with respect to the k-th
     # element in parameter vecotor beta
     qp = []
     for i in range(len(beta)):
         qp.append(np.zeros((nnodes, nnodes)))
-    
+
     for i in range(int(np.shape(trans_p)[0])):
-        # for each row in the gradient matrix, some common factors can be 
+        # for each row in the gradient matrix, some common factors can be
         # computed first
         sumStrength = 0
         sumDiff = [0] * len(beta)
@@ -312,14 +315,14 @@ def diffQ(features, beta, trans_p, alpha):
                 for k in range(len(beta)):
                     qp[k][i, j] = (sumStrength ** -2)*( gradS[k][i, j]*sumStrength -
                     sMat[i, j]*sumDiff[k])*(1 - alpha)
-        
+
     return qp
 
 
 # ***function: costFunc
 # this is the cost function in learning process
 # given the page rank socres of two nodes, one in future link set
-# one in no-link set, and an offset parameter, the cost function value is 
+# one in no-link set, and an offset parameter, the cost function value is
 # returned. (return value is a scalar)
 def costFunc(pl, pd, offset):
     #return (max(0, pl - pd + offset))**2
@@ -329,7 +332,7 @@ def costFunc(pl, pd, offset):
 # ***function: costDiff
 # this is the gradient of cost function
 # given the page rank socres of two nodes, one in future link set
-# one in no-link set, and an offset parameter, the gradient of cost function 
+# one in no-link set, and an offset parameter, the gradient of cost function
 # is returned. (return value is a scalar)
 def costDiff(pl, pd, offset):
     #return 2.0*(max(0, pl - pd + offset))
@@ -338,77 +341,77 @@ def costDiff(pl, pd, offset):
 
 # ***function: minObj
 # this is the object function to be minimized in the learning process
-# the future link set and no-link from training set should be given, also, 
-# parameters in the learning process and the graph of training set should be 
+# the future link set and no-link from training set should be given, also,
+# parameters in the learning process and the graph of training set should be
 # given.
-# Supervised Random Walk pagerank scores are calculated for each node based on 
-# input training graph and features, then cost function value is calculated 
+# Supervised Random Walk pagerank scores are calculated for each node based on
+# input training graph and features, then cost function value is calculated
 # according to the derived pagerank scores.
 # (return value is a scalar)
 def minObj(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     # calculate PageRank according to features and beta values
-    
+
     # transform input features into matrix form
     features_m = genFeatures(nnodes, g, features)
-    
+
     # compute transition matrices for sources
     trans = genTrans(nnodes, g, features_m, source, alpha, beta)
-    
-    # cost value    
+
+    # cost value
     cost = 0
     # calculate cost function for every selected sources nodes
     for i in range(len(source)):
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank = iterPageRank(pp, trans[i])
-        
-        # compute cost from the generated PageRank value    
+
+        # compute cost from the generated PageRank value
         for d in Dset[i]:
             for l in Lset[i]:
                 cost += costFunc(pgrank[l], pgrank[d], offset)
-    
+
     penalty = lam * np.dot(beta, beta)
-    
+
     return (cost + penalty)
 
 
 # ***function: objDiff
 # this is the gradient of the object function
-# given training graph, training sets and parameters, gradient of the object 
+# given training graph, training sets and parameters, gradient of the object
 # function is returned. This is required in gradient descent and BFGS optimization
 # processes.
 # Supervised Random Walk pagerank is calculated then served as a basis to compute
-# the gradient of pagerank scores. Gradient of pagerank scores are derived by 
+# the gradient of pagerank scores. Gradient of pagerank scores are derived by
 # power-iteration-like method.
 # (return value is a vector with the dimension of parameter beta)
 def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
     diffVec = [0] * len(beta)
     # calculate PageRank according to features and beta values
-    
+
     # transform input features into matrix form
-    features_m = genFeatures(nnodes, g, features)        
-    
+    features_m = genFeatures(nnodes, g, features)
+
     ###########################################################
     ### trans_p and transDiff are independent of source node ##
     ###########################################################
-    # trans_p is the original transition matrix 
+    # trans_p is the original transition matrix
     # (without teleportation and varying strength)
     # this is used to calculate gradient of transition matrix
     trans_p = genTrans_plain(nnodes, g, [0], 0)[0]
-        
+
     # a list of matrices is returned by diffQ function
     transDiff = diffQ(features_m, beta, trans_p, alpha)
     ###########################################################
     ###########################################################
-    
+
     # compute transition matrices for sources
     trans = genTrans(nnodes, g, features_m, source, alpha, beta)
-    
+
     # calculate gradient for every selected sources nodes
     for i in range(len(source)):
-    
+
         pp = np.repeat(1.0/nnodes, nnodes)
         pgrank = iterPageRank(pp, trans[i])
-        
+
         for k in range(len(beta)):
             tempObjDiff = 0
             pDiff = np.zeros((1, nnodes))
@@ -418,33 +421,33 @@ def objDiff(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta):
                     tempObjDiff += costDiff(pgrank[l], pgrank[d], offset)*(pDiff[l] - pDiff[d])
             # penalty term
             #tempObjDiff += 2.0 * lam * beta[k]
-            
+
             #diffVec.append(tempObjDiff)
             diffVec[k] += tempObjDiff
-    
+
     # penalty term
     for k in range(len(beta)):
         diffVec[k] += 2.0 * lam * beta[k]
-    
+
     return np.asarray(diffVec)
 
-        
+
 # ***function: trainModel
 # users call this function to train beta parameter of Supervised Random Walk algorithm
-# a training set and training graph must be specified as well as the parameters for the 
+# a training set and training graph must be specified as well as the parameters for the
 # learning process. Also, initial guess of beta parameter shall be given
 # scipy's L-BFGS-B optimizer is called to iteratively optimize the object function,
 # object function and the gradient of cost function is the main input to BFGS
 # optimizer
 def trainModel(Dset, Lset, offset, lam, nnodes, g, features, source, alpha, beta_init):
-    #beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features, 
-    #                        source, alpha), beta_init, fprime = functools.partial(objDiff, 
+    #beta_Opt = fmin_bfgs(functools.partial(minObj, Dset, Lset, 0, 0, nnodes, g, features,
+    #                        source, alpha), beta_init, fprime = functools.partial(objDiff,
     #                        Dset, Lset, 0, 0, nnodes, g, features, source, alpha))
-    
-    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, offset, lam, nnodes, g, features, 
-                            source, alpha), beta_init, fprime = functools.partial(objDiff, 
+
+    beta_Opt = fmin_l_bfgs_b(functools.partial(minObj, Dset, Lset, offset, lam, nnodes, g, features,
+                            source, alpha), beta_init, fprime = functools.partial(objDiff,
                             Dset, Lset, offset, lam, nnodes, g, features, source, alpha))
-    
+
     return beta_Opt
 
 
